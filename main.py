@@ -1,6 +1,8 @@
-def main():
-    print("Hello from library-management-system!")
+from fastapi import FastAPI
 
+app = FastAPI()
+print("Hello from library-management-system!")
 
-if __name__ == "__main__":
-    main()
+@app.get("/")
+async def root():
+    return {"message": "Hello, User."}
