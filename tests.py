@@ -2,6 +2,7 @@ import pytest
 from main import app
 from fastapi.testclient import TestClient
 import json
+import duckdb
 
 from test_data import *
 
@@ -9,7 +10,41 @@ from test_data import *
 def test_client():
     return TestClient(app)
 
-class TestMain:
+@pytest.fixture()
+def database():
+    con = duckdb.connect()
+    yield con
+
+@pytest.fixture(autouse=True)
+def create_tables(database):
+    database.sql("""
+                 CREATE OR REPLACE TABLE books (
+                    book_uuid INTEGER,
+                    title VARCHAR,
+                    author VARCHAR,
+                    isbn VARCHAR,
+                    quantity INTEGER
+                 );
+                 """)
+    database.sql("""
+                    CREATE OR REPLACE TABLE patrons (
+                        id INTEGER,
+                        first_name VARCHAR,
+                        last_name VARCHAR,
+                        address VARCHAR,
+                        phone_number VARCHAR
+                 );
+                 """)
+    yield database
+    
+@pytest.fixture(autouse=True)
+def load_data(database):
+    database.sql("COPY books FROM 'project_data/books.csv';")
+    database.sql("COPY patrons FROM 'project_data/patrons.csv';")
+    yield database
+
+
+class TestEndpoints:
     
     client = TestClient(app) #TODO: Make this a fixture with a generator. 
 
@@ -57,3 +92,14 @@ class TestMain:
         response_json = response.json()
         print(f"return response: {json.dumps(response_json, indent=4)}")
         assert response.status_code == 200
+
+class TestDatabase:
+
+    def test_query(self):
+        duckdb.sql("SELECT 1").show()
+
+    def test_load_book(self, database):
+        database.sql("SELECT * FROM books").show()
+
+    def test_load_patrons(self, database):
+        database.sql("SELECT * FROM patrons").show()
