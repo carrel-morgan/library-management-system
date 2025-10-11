@@ -8,3 +8,5 @@ How to run this project:
 1. Run "uv install -r requirements.txt" (alternatively, "pip install -r requirements.txt")
 2. Run "fastapi dev main.py"
 3. Documentation for the available API endpoints can be found here(assuming you are using standard IP settings): http://127.0.0.1:8000/docs#/
+
+

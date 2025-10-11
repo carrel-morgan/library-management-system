@@ -27,12 +27,12 @@ def create_tables(database):
                  );
                  """)
     database.sql("""
-                    CREATE OR REPLACE TABLE patrons (
-                        id INTEGER,
-                        first_name VARCHAR,
-                        last_name VARCHAR,
-                        address VARCHAR,
-                        phone_number VARCHAR
+                CREATE OR REPLACE TABLE patrons (
+                    id INTEGER,
+                    first_name VARCHAR,
+                    last_name VARCHAR,
+                    address VARCHAR,
+                    phone_number VARCHAR
                  );
                  """)
     yield database
