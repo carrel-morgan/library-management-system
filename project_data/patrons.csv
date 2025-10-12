@@ -1,3 +1,3 @@
-id,first_name,last_name,address,phone_number
+patron_id,first_name,last_name,address,phone_number
 1,John,Doe,1111 Street Rd New York NY 12345,+1 (123)-456-7788
 2,Jane,Doe,2222 Road Ln Boston California 56789,+1 (333)-554-9955

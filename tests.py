@@ -28,19 +28,32 @@ def create_tables(database):
                  """)
     database.sql("""
                 CREATE OR REPLACE TABLE patrons (
-                    id INTEGER,
+                    patron_id INTEGER,
                     first_name VARCHAR,
                     last_name VARCHAR,
                     address VARCHAR,
                     phone_number VARCHAR
                  );
                  """)
+    database.sql("""
+                CREATE OR REPLACE TABLE checkouts (
+                    checkout_id INTEGER,
+                    book_uuid INTEGER,
+                    patron_id INTEGER,
+                    checkout_date DATE,
+                    due_date DATE,
+                    currently_checked_out BOOLEAN,
+                    overdue BOOLEAN
+                 );
+             """)
     yield database
     
 @pytest.fixture(autouse=True)
 def load_data(database):
     database.sql("COPY books FROM 'project_data/books.csv';")
     database.sql("COPY patrons FROM 'project_data/patrons.csv';")
+    database.sql("COPY checkouts FROM 'project_data/checkouts.csv';")
+
     yield database
 
 
@@ -103,3 +116,6 @@ class TestDatabase:
 
     def test_load_patrons(self, database):
         database.sql("SELECT * FROM patrons").show()
+
+    def test_load_checkouts(self, database):
+        database.sql("SELECT * FROM checkouts").show()

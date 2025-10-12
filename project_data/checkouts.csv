@@ -1,0 +1,4 @@
+checkout_id,book_uuid,patron_id,checkout_date,due_date,currently_checked_out,overdue
+1,1,2,05/20/2025,06/20/2025,True,False
+2,2,2,09/10/2025,10/10/2025,True,False
+3,3,2,09/10/2025,10/10/2025,True,False
