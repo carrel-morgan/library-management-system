@@ -3,8 +3,16 @@ from main import app
 from fastapi.testclient import TestClient
 import json
 import duckdb
-
+from database_definition_language import (
+    create_books_table_sql,
+    create_patrons_table_sql,
+    create_checkouts_table,
+    copy_books_from_csv_sql,
+    copy_patrons_from_csv_sql,
+    copy_checkouts_from_csv_sql
+)
 from test_data import *
+from validation_and_reconciliation import validate_available_books
 
 @pytest.fixture()
 def test_client():
@@ -17,42 +25,16 @@ def database():
 
 @pytest.fixture(autouse=True)
 def create_tables(database):
-    database.sql("""
-                 CREATE OR REPLACE TABLE books (
-                    book_uuid INTEGER,
-                    title VARCHAR,
-                    author VARCHAR,
-                    isbn VARCHAR,
-                    quantity INTEGER
-                 );
-                 """)
-    database.sql("""
-                CREATE OR REPLACE TABLE patrons (
-                    patron_id INTEGER,
-                    first_name VARCHAR,
-                    last_name VARCHAR,
-                    address VARCHAR,
-                    phone_number VARCHAR
-                 );
-                 """)
-    database.sql("""
-                CREATE OR REPLACE TABLE checkouts (
-                    checkout_id INTEGER,
-                    book_uuid INTEGER,
-                    patron_id INTEGER,
-                    checkout_date DATE,
-                    due_date DATE,
-                    currently_checked_out BOOLEAN,
-                    overdue BOOLEAN
-                 );
-             """)
+    database.sql(create_books_table_sql)
+    database.sql(create_patrons_table_sql)
+    database.sql(create_checkouts_table)
     yield database
     
 @pytest.fixture(autouse=True)
 def load_data(database):
-    database.sql("COPY books FROM 'project_data/books.csv';")
-    database.sql("COPY patrons FROM 'project_data/patrons.csv';")
-    database.sql("COPY checkouts FROM 'project_data/checkouts.csv';")
+    database.sql(copy_books_from_csv_sql)
+    database.sql(copy_patrons_from_csv_sql)
+    database.sql(copy_checkouts_from_csv_sql)
 
     yield database
 
@@ -119,3 +101,6 @@ class TestDatabase:
 
     def test_load_checkouts(self, database):
         database.sql("SELECT * FROM checkouts").show()
+
+    def test_validate_available_books(self, database):
+        validate_available_books(database)

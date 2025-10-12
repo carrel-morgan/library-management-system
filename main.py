@@ -1,5 +1,13 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from database_definition_language import (
+    create_books_table_sql,
+    create_patrons_table_sql,
+    create_checkouts_table,
+    copy_books_from_csv_sql,
+    copy_patrons_from_csv_sql,
+    copy_checkouts_from_csv_sql
+)
 import duckdb
 
 app = FastAPI()
@@ -9,37 +17,12 @@ conn = duckdb.connect()
 #Ideally this should be a class, but at this point that's going to take more time than I have to dedicate to this. 
 def setup_database():
     conn = duckdb.connect()
-    conn.sql("""
-                 CREATE OR REPLACE TABLE books (
-                    book_uuid INTEGER,
-                    title VARCHAR,
-                    author VARCHAR,
-                    isbn VARCHAR,
-                    quantity INTEGER
-                 );
-                 """)
-    conn.sql("""
-                CREATE OR REPLACE TABLE patrons (
-                    patron_id INTEGER,
-                    first_name VARCHAR,
-                    last_name VARCHAR,
-                    address VARCHAR,
-                    phone_number VARCHAR
-                 );
-                 """)
-    conn.sql("""
-                CREATE OR REPLACE TABLE checkouts (
-                    checkout_id INTEGER,
-                    book_uuid INTEGER,
-                    patron_id INTEGER,
-                    checkout_date DATE,
-                    due_date DATE,
-                    overdue BOOLEAN
-                 );
-             """)
-    conn.sql("COPY books FROM 'project_data/books.csv';")
-    conn.sql("COPY patrons FROM 'project_data/patrons.csv';")
-    conn.sql("COPY checkouts FROM 'project_data/checkouts.csv';")
+    conn.sql(create_books_table_sql)
+    conn.sql(create_patrons_table_sql)
+    conn.sql(create_checkouts_table)
+    conn.sql(copy_books_from_csv_sql)
+    conn.sql(copy_patrons_from_csv_sql)
+    conn.sql(copy_checkouts_from_csv_sql)
     yield conn
 
 class LMSResponse(BaseModel):
@@ -56,7 +39,7 @@ class LMSBook(BaseModel):
     author: str
     isbn: str
     quantity: int
-    available: int
+    num_available: int
 
 class LMSPatron(BaseModel):
     """Skeleton class for a library patron"""
@@ -86,8 +69,8 @@ async def get_available_books():
     db_query = """
     SELECT *
     FROM books
+    WHERE available > 0
     ORDER BY title
-    LEFT JOIN (SELECT book_uuid FROM transactions)
     """
     db_query_results = "placeholder_db_query_results" # TODO: Implement a simple database
     return {"message": db_query_results,

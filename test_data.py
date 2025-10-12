@@ -7,7 +7,8 @@ test_book_1 = LMSBook(
     title = "Pride and Prejudice",
     author = "Steve",
     isbn = "AR987654321",
-    quantity = 10
+    quantity = 10,
+    num_available = 9
 )
 
 test_patron_1 = LMSPatron(
