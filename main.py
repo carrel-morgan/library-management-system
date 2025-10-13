@@ -15,15 +15,14 @@ app = FastAPI()
 conn = duckdb.connect()
 
 #Ideally this should be a class, but at this point that's going to take more time than I have to dedicate to this. 
-def setup_database():
-    conn = duckdb.connect()
-    conn.sql(create_books_table_sql)
-    conn.sql(create_patrons_table_sql)
-    conn.sql(create_checkouts_table)
-    conn.sql(copy_books_from_csv_sql)
-    conn.sql(copy_patrons_from_csv_sql)
-    conn.sql(copy_checkouts_from_csv_sql)
-    yield conn
+def setup_database(lms_connection: duckdb.DuckDBPyConnection):
+    lms_connection.sql(create_books_table_sql)
+    lms_connection.sql(create_patrons_table_sql)
+    lms_connection.sql(create_checkouts_table)
+    lms_connection.sql(copy_books_from_csv_sql)
+    lms_connection.sql(copy_patrons_from_csv_sql)
+    lms_connection.sql(copy_checkouts_from_csv_sql)
+    return lms_connection
 
 class LMSResponse(BaseModel):
     """Skeleton class for an (L)ibarary (M)anagement (S)ystem response"""
@@ -59,6 +58,7 @@ class LMSTransaction(BaseModel):
     currently_checked_out: bool
     overdue: bool
 
+setup_database(conn)
 
 @app.get("/")
 async def root():
@@ -69,10 +69,13 @@ async def get_available_books():
     db_query = """
     SELECT *
     FROM books
-    WHERE available > 0
+    WHERE num_available > 0
     ORDER BY title
     """
-    db_query_results = "placeholder_db_query_results" # TODO: Implement a simple database
+    db_query_results = conn.sql(db_query).fetchall()
+    #TODO: Serialize these results into an object. 
+    print("printing db query results: ")
+    print(db_query_results)
     return {"message": db_query_results,
             "status_code": 2001}
 
@@ -87,6 +90,7 @@ async def return_book(book_to_return: LMSBook, patron_returning: LMSPatron):
             "status_code": 2001}
 
 def main(): 
-    conn = setup_database()
+    conn = duckdb.connect()
+    setup_database(conn)
     
     

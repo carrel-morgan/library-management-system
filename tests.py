@@ -1,5 +1,5 @@
 import pytest
-from main import app
+from main import app, setup_database
 from fastapi.testclient import TestClient
 import json
 import duckdb
@@ -13,10 +13,6 @@ from database_definition_language import (
 )
 from test_data import *
 from validation_and_reconciliation import validate_available_books
-
-@pytest.fixture()
-def test_client():
-    return TestClient(app)
 
 @pytest.fixture()
 def database():
@@ -38,10 +34,15 @@ def load_data(database):
 
     yield database
 
+@pytest.fixture()
+def test_client(database):
+    with TestClient(app) as client:
+        yield client
 
 class TestEndpoints:
     
     client = TestClient(app) #TODO: Make this a fixture with a generator. 
+    # setup_database(client)
 
     def test_initial(self):
         print("Test is working")
@@ -57,8 +58,9 @@ class TestEndpoints:
     def test_get_available_books(self, test_client):
         response = test_client.get("/api/books")
         response_json = response.json()
+        print(f"get_available_books_response: \n {json.dumps(response.json(), indent=4)}")
         assert response.status_code == 200
-        assert response_json["message"] == "placeholder_db_query_results"
+        # assert response_json["message"] == "placeholder_db_query_results"
         assert response_json["status_code"] == 2001
 
 
